@@ -227,6 +227,71 @@
     font-size:12px;color:#a8d4f5;
     font-weight:600;
   }
+
+  /* WORKFLOW STEPPER */
+  .workflow-wrap {
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.12);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-bottom:20px;
+  }
+  .workflow-title {
+    font-size:10px;font-weight:700;letter-spacing:1.5px;
+    text-transform:uppercase;color:rgba(255,255,255,0.4);
+    margin-bottom:12px;
+  }
+  .workflow-steps {
+    display:flex;flex-direction:column;gap:0;
+  }
+  .workflow-step {
+    display:flex;align-items:flex-start;gap:12px;
+    position:relative;
+  }
+  .workflow-step:not(:last-child)::after {
+    content:'';
+    position:absolute;
+    left:15px;top:32px;
+    width:2px;height:calc(100% - 8px);
+    background:rgba(255,255,255,0.15);
+  }
+  .step-badge {
+    width:32px;height:32px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:800;flex-shrink:0;
+    position:relative;z-index:1;
+  }
+  .step-content {
+    flex:1;padding-bottom:16px;
+  }
+  .step-label {
+    font-size:10px;font-weight:700;letter-spacing:1px;
+    text-transform:uppercase;opacity:0.5;margin-bottom:2px;
+  }
+  .step-title {
+    font-size:14px;font-weight:700;color:white;
+    display:flex;align-items:center;gap:8px;
+    flex-wrap:wrap;
+  }
+  .start-here-badge {
+    background:#c4b5fd;color:#3b0764;
+    font-size:9px;font-weight:800;
+    letter-spacing:0.5px;text-transform:uppercase;
+    padding:2px 7px;border-radius:10px;
+    flex-shrink:0;
+  }
+  .step-sub {
+    font-size:11px;opacity:0.5;margin-top:3px;
+  }
+  .step-options {
+    display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;
+  }
+  .step-option-pill {
+    font-size:11px;font-weight:600;
+    padding:4px 10px;border-radius:20px;
+    border:1px solid rgba(255,255,255,0.2);
+    color:white;opacity:0.8;
+  }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -280,6 +345,46 @@
     <div class="selected-client-badge" id="selectedBadge"></div>
   </div>
 
+  <!-- WORKFLOW GUIDE -->
+  <div class="workflow-wrap">
+    <div class="workflow-title">How it works</div>
+    <div class="workflow-steps">
+
+      <div class="workflow-step">
+        <div class="step-badge" style="background:#7c3aed;">1</div>
+        <div class="step-content">
+          <div class="step-label">Step 1</div>
+          <div class="step-title">
+            Prospect / Client
+            <span class="start-here-badge">Start Here</span>
+          </div>
+          <div class="step-sub">Create the client record — all other forms follow from this</div>
+        </div>
+      </div>
+
+      <div class="workflow-step">
+        <div class="step-badge" style="background:#d35400;">2</div>
+        <div class="step-content">
+          <div class="step-label">Step 2</div>
+          <div class="step-title">Site Administration</div>
+          <div class="step-sub">Pricing, invoicing and account setup</div>
+        </div>
+      </div>
+
+      <div class="workflow-step">
+        <div class="step-badge" style="background:rgba(255,255,255,0.2);">3</div>
+        <div class="step-content">
+          <div class="step-label">Step 3 — Complete as required</div>
+          <div class="step-options">
+            <span class="step-option-pill" style="border-color:rgba(100,210,255,0.4);color:#a8d4f5;">📋 Bulk Site Audit</span>
+            <span class="step-option-pill" style="border-color:rgba(52,211,153,0.4);color:#6ee7b7;">📦 Packaged Assessment</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- FORMS -->
   <div class="section-label">Site Forms</div>
 
@@ -287,8 +392,12 @@
      class="form-card" style="--card-accent:#c4b5fd;">
     <div class="card-icon">🎯</div>
     <div class="card-text">
-      <div class="card-title">Prospect</div>
-      <div class="card-desc">New client · Lead capture · CRM data collection</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+        <span style="font-size:9px;font-weight:800;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;letter-spacing:0.5px;">STEP 1</span>
+        <span style="font-size:9px;font-weight:800;background:#c4b5fd;color:#3b0764;padding:2px 7px;border-radius:10px;letter-spacing:0.5px;">START HERE</span>
+      </div>
+      <div class="card-title">Prospect / Client</div>
+      <div class="card-desc">New &amp; existing clients · Lead capture · CRM data</div>
     </div>
     <div class="card-arrow">›</div>
   </a>
@@ -297,6 +406,7 @@
      class="form-card" style="--card-accent:#f59e0b;">
     <div class="card-icon">⚙️</div>
     <div class="card-text">
+      <div style="margin-bottom:3px;"><span style="font-size:9px;font-weight:800;background:#d35400;color:white;padding:2px 7px;border-radius:10px;letter-spacing:0.5px;">STEP 2</span></div>
       <div class="card-title">Site Administration</div>
       <div class="card-desc">Client setup · Pricing · Invoicing &amp; PO requirements</div>
     </div>
@@ -307,6 +417,7 @@
      class="form-card" style="--card-accent:#64d2ff;">
     <div class="card-icon">📋</div>
     <div class="card-text">
+      <div style="margin-bottom:3px;"><span style="font-size:9px;font-weight:800;background:rgba(255,255,255,0.2);color:white;padding:2px 7px;border-radius:10px;letter-spacing:0.5px;">STEP 3</span></div>
       <div class="card-title">Bulk Site Audit</div>
       <div class="card-desc">Safety, QA &amp; ISO-22241 compliance · Full &amp; desktop modes</div>
     </div>
@@ -317,6 +428,7 @@
      class="form-card" style="--card-accent:#34d399;">
     <div class="card-icon">📦</div>
     <div class="card-text">
+      <div style="margin-bottom:3px;"><span style="font-size:9px;font-weight:800;background:rgba(255,255,255,0.2);color:white;padding:2px 7px;border-radius:10px;letter-spacing:0.5px;">STEP 3</span></div>
       <div class="card-title">Packaged Site Assessment</div>
       <div class="card-desc">Packaged products · Access, equipment &amp; site evaluation</div>
     </div>

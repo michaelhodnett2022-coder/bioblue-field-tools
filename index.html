@@ -226,6 +226,8 @@
     margin-top:8px;
     font-size:12px;color:#a8d4f5;
     font-weight:600;
+    flex-direction:column;
+    transition:background 0.3s,border-color 0.3s,color 0.3s;
   }
 
   /* WORKFLOW STEPPER */
@@ -578,7 +580,16 @@ let allClients = [];
 
 function filterClients(query) {
   const drop = document.getElementById('clientDropdown');
-  if (!allClients.length) { drop.style.display='none'; return; }
+  if (!drop) return;
+
+  // Not yet loaded — prompt to load
+  if (!allClients.length) {
+    drop.innerHTML = `<div style="padding:10px 14px;font-size:12px;color:rgba(255,255,255,0.5);font-style:italic;">
+      Tap ☁️ Load to fetch client list first</div>`;
+    drop.style.display = 'block';
+    return;
+  }
+
   const q = query.toLowerCase().trim();
   const matches = q
     ? allClients.filter(cl =>
@@ -588,7 +599,14 @@ function filterClients(query) {
         cl.id.toLowerCase().includes(q)
       )
     : allClients;
-  if (!matches.length) { drop.style.display='none'; return; }
+
+  if (!matches.length) {
+    drop.innerHTML = `<div style="padding:10px 14px;font-size:12px;color:rgba(255,255,255,0.5);font-style:italic;">
+      No clients found — try a different search</div>`;
+    drop.style.display = 'block';
+    return;
+  }
+
   drop.innerHTML = matches.slice(0,20).map(cl => `
     <div onclick="selectClientFromSearch('${cl.id}','${cl.name.replace(/'/g,"\'")}')"
       style="padding:10px 14px;cursor:pointer;font-size:13px;color:white;border-bottom:1px solid rgba(255,255,255,0.1);"
@@ -611,6 +629,8 @@ function selectClientFromSearch(id, name) {
   // Show Update Prospect button
   const upBtn = document.getElementById('updateProspectBtn');
   if (upBtn) upBtn.style.display = 'block';
+  // Check folder completeness and colour badge
+  setTimeout(() => checkFolderStatus(id), 300);
 }
 
 document.addEventListener('click', e => {
@@ -628,27 +648,20 @@ function openUpdateProspect() {
 }
 
 function onClientSelect() {
-  const sel    = document.getElementById('clientSelect');
-  const id     = sel ? sel.value : '';
-  const badge  = document.getElementById('selectedBadge');
+  // Kept for backwards compat — actual selection now via selectClientFromSearch()
+}
 
-  if (!id) {
-    sessionStorage.removeItem('bb_selected_client');
-    sessionStorage.removeItem('bb_selected_client_name');
-    badge.style.display = 'none';
-    setStatus(`✅ ${clientData.length} client${clientData.length!==1?'s':''} loaded`);
-    return;
-  }
-
-  // Save to session
-  sessionStorage.setItem('bb_selected_client', id);
-  const cl = clientData.find(c => c.id === id);
-  if (cl) {
-    sessionStorage.setItem('bb_selected_client_name', cl.name);
-    badge.style.display = 'block';
-    badge.textContent   = `✅ Active: ${cl.name}${cl.suburb?' · '+cl.suburb:''}${cl.state?' ('+cl.state+')':''}  —  ${id}`;
-  }
-  setStatus('Client selected — tap a form to continue');
+function clearClientSelection() {
+  sessionStorage.removeItem('bb_selected_client');
+  sessionStorage.removeItem('bb_selected_client_name');
+  document.getElementById('clientSearch').value = '';
+  const badge = document.getElementById('selectedBadge');
+  if (badge) badge.style.display = 'none';
+  const upBtn = document.getElementById('updateProspectBtn');
+  if (upBtn) upBtn.style.display = 'none';
+  setStatus(allClients.length
+    ? `✅ ${allClients.length} client${allClients.length!==1?'s':''} loaded — type to search`
+    : 'Tap Load to fetch clients from Drive');
 }
 
 function openForm(baseUrl) {
@@ -672,10 +685,18 @@ window.addEventListener('load', () => {
   const savedName = sessionStorage.getItem('bb_selected_client_name');
   if (saved) {
     const badge = document.getElementById('selectedBadge');
-    badge.style.display = 'block';
-    badge.textContent   = savedName
-      ? `✅ Active: ${savedName}  —  ${saved}`
-      : `✅ Active: ${saved} — tap Load to refresh full details`;
+    if (badge) {
+      badge.style.display = 'block';
+      badge.textContent   = savedName
+        ? `✅ Active: ${savedName}  —  ${saved}`
+        : `✅ Active: ${saved} — tap Load to refresh full details`;
+    }
+    // Restore client name in search box
+    const searchBox = document.getElementById('clientSearch');
+    if (searchBox && savedName) searchBox.value = savedName;
+    // Show Update Prospect button
+    const upBtn = document.getElementById('updateProspectBtn');
+    if (upBtn) upBtn.style.display = 'block';
     setStatus('Client active — tap a form to continue, or Load to refresh list');
   }
 
@@ -684,6 +705,104 @@ window.addEventListener('load', () => {
     setTimeout(loadClients, 500);
   }
 });
+
+// =====================================================================
+// FOLDER STATUS CHECK — colour code by completeness
+// =====================================================================
+async function checkFolderStatus(clientId) {
+  if (!gdriveToken || !clientId) return;
+  try {
+    // Get folder ID from client records
+    const fr = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q=name='BioBlue Audits' and mimeType='application/vnd.google-apps.folder' and trashed=false&fields=files(id)`,
+      { headers: { Authorization: `Bearer ${gdriveToken}` } }
+    );
+    const fd = await fr.json();
+    if (!fd.files || !fd.files.length) return;
+    const rootId = fd.files[0].id;
+
+    // Get sheet to find folder ID
+    const sr = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q=name='BioBlue_Client_Records.xlsx' and '${rootId}' in parents and trashed=false&fields=files(id)`,
+      { headers: { Authorization: `Bearer ${gdriveToken}` } }
+    );
+    const sd = await sr.json();
+    if (!sd.files || !sd.files.length) return;
+
+    const dl  = await fetch(`https://www.googleapis.com/drive/v3/files/${sd.files[0].id}?alt=media`, { headers: { Authorization: `Bearer ${gdriveToken}` } });
+    const ab  = await dl.arrayBuffer();
+    const wb  = XLSX.read(new Uint8Array(ab), { type: 'array' });
+    const ws  = wb.Sheets['Client Records'];
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+    const hdrs = rows[0] || [];
+
+    const idCol     = hdrs.indexOf('Client ID');
+    const folderCol = hdrs.indexOf('Drive Folder ID');
+    const row = rows.slice(1).find(r => r[idCol] === clientId);
+    if (!row || !row[folderCol]) return;
+
+    const folderId = row[folderCol];
+
+    // List PDFs in client folder
+    const lr = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q='${folderId}' in parents and name contains '.pdf' and trashed=false&fields=files(name)`,
+      { headers: { Authorization: `Bearer ${gdriveToken}` } }
+    );
+    const ld = await lr.json();
+    const files = (ld.files || []).map(f => f.name.toLowerCase());
+
+    // Check which forms are present
+    const hasProspect = files.some(f => f.includes('prospect'));
+    const hasAdmin    = files.some(f => f.includes('site_admin') || f.includes('admin'));
+    const hasAudit    = files.some(f =>
+      f.includes('site_audit') || f.includes('packaged') || f.includes('assessment')
+    );
+
+    const count = [hasProspect, hasAdmin, hasAudit].filter(Boolean).length;
+    const badge = document.getElementById('selectedBadge');
+    if (!badge) return;
+
+    // Colour code the badge
+    if (count === 3) {
+      // All complete — green
+      badge.style.background  = 'rgba(0,135,90,0.2)';
+      badge.style.borderColor = 'rgba(0,135,90,0.5)';
+      badge.style.color       = '#6ee7b7';
+      const status = '✅ Prospect  ✅ Admin  ✅ Audit';
+      updateBadgeStatus(badge, status);
+    } else if (count === 0) {
+      // Nothing uploaded yet — grey (default)
+      badge.style.background  = 'rgba(100,210,255,0.15)';
+      badge.style.borderColor = 'rgba(100,210,255,0.3)';
+      badge.style.color       = '#a8d4f5';
+      updateBadgeStatus(badge, '⚪ No forms uploaded yet');
+    } else {
+      // Partial — amber
+      badge.style.background  = 'rgba(230,126,34,0.2)';
+      badge.style.borderColor = 'rgba(230,126,34,0.4)';
+      badge.style.color       = '#fcd34d';
+      const parts = [
+        hasProspect ? '✅ Prospect' : '⬜ Prospect',
+        hasAdmin    ? '✅ Admin'    : '⬜ Admin',
+        hasAudit    ? '✅ Audit'    : '⬜ Audit',
+      ];
+      updateBadgeStatus(badge, parts.join('  '));
+    }
+  } catch(e) {
+    console.warn('Folder status check failed:', e.message);
+  }
+}
+
+function updateBadgeStatus(badge, statusText) {
+  // Add status line below existing badge text
+  const existing = badge.querySelector('.folder-status');
+  if (existing) existing.remove();
+  const span = document.createElement('div');
+  span.className = 'folder-status';
+  span.style.cssText = 'font-size:10px;margin-top:4px;letter-spacing:0.3px;';
+  span.textContent = statusText;
+  badge.appendChild(span);
+}
 </script>
 </body>
 </html>

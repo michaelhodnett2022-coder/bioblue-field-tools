@@ -562,8 +562,22 @@ async function loadClients() {
     // Restore previously selected client if still in session
     const saved = sessionStorage.getItem('bb_selected_client');
     if (saved) {
-      sel.value = saved;
-      onClientSelect();
+      const cl = allClients.find(c => c.id === saved);
+      if (cl) {
+        // Resolve full name now that list is loaded
+        sessionStorage.setItem('bb_selected_client_name', cl.name);
+        const searchBox = document.getElementById('clientSearch');
+        if (searchBox) searchBox.value = cl.name;
+        const badge = document.getElementById('selectedBadge');
+        if (badge) {
+          badge.style.display = 'flex';
+          badge.textContent = `✅ Active: ${cl.name}${cl.suburb?' · '+cl.suburb:''}${cl.state?' ('+cl.state+')':''}`;
+        }
+        const upBtn = document.getElementById('updateProspectBtn');
+        if (upBtn) upBtn.style.display = 'block';
+        // Re-check folder status with resolved client
+        setTimeout(() => checkFolderStatus(saved), 300);
+      }
     }
 
   } catch(e) {
@@ -696,9 +710,13 @@ window.addEventListener('load', () => {
     setStatus('Client active — tap a form to continue, or Load to refresh list');
   }
 
-  // If returning param was set, auto-load client list so BDM sees updated pipeline
+  // If returning from a form submission, attempt a silent auto-load to resolve
+  // name + pipeline status. If the token isn't available it fails quietly and
+  // the BDM can tap Load manually (badge still shows the ID in the meantime).
   if (returning) {
-    setTimeout(loadClients, 500);
+    setTimeout(() => {
+      try { loadClients(); } catch(e) { /* silent — user can tap Load */ }
+    }, 600);
   }
 });
 

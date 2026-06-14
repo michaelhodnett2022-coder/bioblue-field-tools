@@ -764,9 +764,9 @@ async function checkFolderStatus(clientId) {
     // Check which forms are present
     const hasProspect = files.some(f => f.includes('prospect'));
     const hasAdmin    = files.some(f => f.includes('site_admin') || f.includes('admin'));
-    const hasAudit    = files.some(f =>
-      f.includes('site_audit') || f.includes('packaged') || f.includes('assessment')
-    );
+    const hasBulkAudit= files.some(f => f.includes('site_audit'));
+    const hasPackaged = files.some(f => f.includes('packaged') || f.includes('assessment'));
+    const hasAudit    = hasBulkAudit || hasPackaged; // either counts as the "audit" step
 
     const count = [hasProspect, hasAdmin, hasAudit].filter(Boolean).length;
     const badge = document.getElementById('selectedBadge');
@@ -778,7 +778,10 @@ async function checkFolderStatus(clientId) {
       badge.style.background  = 'rgba(0,135,90,0.2)';
       badge.style.borderColor = 'rgba(0,135,90,0.5)';
       badge.style.color       = '#6ee7b7';
-      const status = '✅ Prospect  ✅ Admin  ✅ Audit';
+      const auditLabel = hasBulkAudit && hasPackaged ? '✅ Bulk + Packaged'
+                       : hasBulkAudit ? '✅ Bulk Audit'
+                       : '✅ Packaged';
+      const status = `✅ Prospect  ✅ Admin  ${auditLabel}`;
       updateBadgeStatus(badge, status);
     } else if (count === 0) {
       // Nothing uploaded yet — grey (default)
@@ -791,10 +794,14 @@ async function checkFolderStatus(clientId) {
       badge.style.background  = 'rgba(230,126,34,0.2)';
       badge.style.borderColor = 'rgba(230,126,34,0.4)';
       badge.style.color       = '#fcd34d';
+      const auditPart = hasBulkAudit && hasPackaged ? '✅ Bulk + Packaged'
+                      : hasBulkAudit ? '✅ Bulk Audit'
+                      : hasPackaged  ? '✅ Packaged'
+                      : '⬜ Audit';
       const parts = [
         hasProspect ? '✅ Prospect' : '⬜ Prospect',
         hasAdmin    ? '✅ Admin'    : '⬜ Admin',
-        hasAudit    ? '✅ Audit'    : '⬜ Audit',
+        auditPart,
       ];
       updateBadgeStatus(badge, parts.join('  '));
     }

@@ -327,6 +327,7 @@
         </div>
       </div>
       <button class="load-clients-btn" onclick="loadClients()">☁️ Load</button>
+      <button class="load-clients-btn" onclick="clearClientSelection()" style="background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.25);">🧹 Clear</button>
     </div>
     <div style="display:flex;gap:8px;margin-top:8px;">
       <a href="https://michaelhodnett2022-coder.github.io/bioblue-prospect"
@@ -669,6 +670,7 @@ function clearClientSelection() {
   if (badge) badge.style.display = 'none';
   const upBtn = document.getElementById('updateProspectBtn');
   if (upBtn) upBtn.style.display = 'none';
+  setStatus('Cleared — search or tap Load to select a client');
   setStatus(allClients.length
     ? `✅ ${allClients.length} client${allClients.length!==1?'s':''} loaded — type to search`
     : 'Tap Load to fetch clients from Drive');
@@ -768,43 +770,37 @@ async function checkFolderStatus(clientId) {
     const hasPackaged = files.some(f => f.includes('packaged') || f.includes('assessment'));
     const hasAudit    = hasBulkAudit || hasPackaged; // either counts as the "audit" step
 
-    const count = [hasProspect, hasAdmin, hasAudit].filter(Boolean).length;
+    // "Complete" = Prospect + Admin + at least one audit type (Bulk or Packaged)
+    const isComplete = hasProspect && hasAdmin && (hasBulkAudit || hasPackaged);
+    const anyDone    = hasProspect || hasAdmin || hasBulkAudit || hasPackaged;
     const badge = document.getElementById('selectedBadge');
     if (!badge) return;
 
-    // Colour code the badge
-    if (count === 3) {
-      // All complete — green
+    // Four separate ticks — Bulk Audit and Packaged shown independently
+    const parts = [
+      hasProspect  ? '✅ Prospect'   : '⬜ Prospect',
+      hasAdmin     ? '✅ Admin'      : '⬜ Admin',
+      hasBulkAudit ? '✅ Bulk Audit' : '⬜ Bulk Audit',
+      hasPackaged  ? '✅ Packaged'   : '⬜ Packaged',
+    ];
+
+    if (isComplete) {
+      // Complete — green
       badge.style.background  = 'rgba(0,135,90,0.2)';
       badge.style.borderColor = 'rgba(0,135,90,0.5)';
       badge.style.color       = '#6ee7b7';
-      const auditLabel = hasBulkAudit && hasPackaged ? '✅ Bulk + Packaged'
-                       : hasBulkAudit ? '✅ Bulk Audit'
-                       : '✅ Packaged';
-      const status = `✅ Prospect  ✅ Admin  ${auditLabel}`;
-      updateBadgeStatus(badge, status);
-    } else if (count === 0) {
-      // Nothing uploaded yet — grey (default)
+    } else if (!anyDone) {
+      // Nothing yet — grey
       badge.style.background  = 'rgba(100,210,255,0.15)';
       badge.style.borderColor = 'rgba(100,210,255,0.3)';
       badge.style.color       = '#a8d4f5';
-      updateBadgeStatus(badge, '⚪ No forms uploaded yet');
     } else {
       // Partial — amber
       badge.style.background  = 'rgba(230,126,34,0.2)';
       badge.style.borderColor = 'rgba(230,126,34,0.4)';
       badge.style.color       = '#fcd34d';
-      const auditPart = hasBulkAudit && hasPackaged ? '✅ Bulk + Packaged'
-                      : hasBulkAudit ? '✅ Bulk Audit'
-                      : hasPackaged  ? '✅ Packaged'
-                      : '⬜ Audit';
-      const parts = [
-        hasProspect ? '✅ Prospect' : '⬜ Prospect',
-        hasAdmin    ? '✅ Admin'    : '⬜ Admin',
-        auditPart,
-      ];
-      updateBadgeStatus(badge, parts.join('  '));
     }
+    updateBadgeStatus(badge, parts.join('  '));
   } catch(e) {
     console.warn('Folder status check failed:', e.message);
   }

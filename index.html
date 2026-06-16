@@ -712,10 +712,12 @@ window.addEventListener('load', () => {
     setStatus('Client active — tap a form to continue, or Load to refresh list');
   }
 
-  // If returning from a form submission, attempt a silent auto-load to resolve
-  // name + pipeline status. If the token isn't available it fails quietly and
-  // the BDM can tap Load manually (badge still shows the ID in the meantime).
-  if (returning) {
+  // If returning from a form submission, only auto-refresh the list IF we already
+  // hold a valid Drive token. We must NOT trigger the Google sign-in popup from an
+  // automatic (non-click) context — browsers block popups without a user gesture,
+  // which was causing the silent failures. The badge already shows the client name
+  // from session; the BDM taps Load (a real gesture) when they want a fresh fetch.
+  if (returning && gdriveToken) {
     setTimeout(() => {
       try { loadClients(); } catch(e) { /* silent — user can tap Load */ }
     }, 600);

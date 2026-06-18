@@ -366,21 +366,30 @@
       </div>
 
       <div class="workflow-step">
-        <div class="step-badge" style="background:#d35400;">2</div>
+        <div class="step-badge" style="background:#0ea5e9;">2</div>
         <div class="step-content">
-          <div class="step-label">Step 2</div>
+          <div class="step-label">Step 2 — if applicable</div>
+          <div class="step-title">Quote Builder</div>
+          <div class="step-sub">Generate a formal AdBlue® supply quotation for the client</div>
+        </div>
+      </div>
+
+      <div class="workflow-step">
+        <div class="step-badge" style="background:#d35400;">3</div>
+        <div class="step-content">
+          <div class="step-label">Step 3</div>
           <div class="step-title">Site Administration</div>
           <div class="step-sub">Pricing, invoicing and account setup</div>
         </div>
       </div>
 
       <div class="workflow-step">
-        <div class="step-badge" style="background:rgba(255,255,255,0.2);">3</div>
+        <div class="step-badge" style="background:rgba(255,255,255,0.2);">4</div>
         <div class="step-content">
-          <div class="step-label">Step 3 — Complete as required</div>
+          <div class="step-label">Step 4 — Complete as required</div>
           <div class="step-options">
-            <span class="step-option-pill" style="border-color:rgba(100,210,255,0.4);color:#a8d4f5;">3A · 📋 Bulk Site Audit</span>
-            <span class="step-option-pill" style="border-color:rgba(52,211,153,0.4);color:#6ee7b7;">3B · 📦 Packaged Assessment</span>
+            <span class="step-option-pill" style="border-color:rgba(100,210,255,0.4);color:#a8d4f5;">4A · 📋 Bulk Site Audit</span>
+            <span class="step-option-pill" style="border-color:rgba(52,211,153,0.4);color:#6ee7b7;">4B · 📦 Packaged Assessment</span>
           </div>
         </div>
       </div>
@@ -405,11 +414,25 @@
     <div class="card-arrow">›</div>
   </a>
 
+  <a href="javascript:void(0)" onclick="openForm('https://michaelhodnett2022-coder.github.io/bioblue-quote')"
+     class="form-card" style="--card-accent:#38bdf8;">
+    <div class="card-icon">📄</div>
+    <div class="card-text">
+      <div style="margin-bottom:3px;">
+        <span style="font-size:9px;font-weight:800;background:#0ea5e9;color:white;padding:2px 7px;border-radius:10px;letter-spacing:0.5px;">STEP 2</span>
+        <span style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.4);margin-left:5px;">if applicable</span>
+      </div>
+      <div class="card-title">Quote Builder</div>
+      <div class="card-desc">Formal AdBlue® supply quotation · PDF &amp; Word · Saved to client folder</div>
+    </div>
+    <div class="card-arrow">›</div>
+  </a>
+
   <a href="javascript:void(0)" onclick="openForm('https://michaelhodnett2022-coder.github.io/bioblue-site-admin')"
      class="form-card" style="--card-accent:#f59e0b;">
     <div class="card-icon">⚙️</div>
     <div class="card-text">
-      <div style="margin-bottom:3px;"><span style="font-size:9px;font-weight:800;background:#d35400;color:white;padding:2px 7px;border-radius:10px;letter-spacing:0.5px;">STEP 2</span></div>
+      <div style="margin-bottom:3px;"><span style="font-size:9px;font-weight:800;background:#d35400;color:white;padding:2px 7px;border-radius:10px;letter-spacing:0.5px;">STEP 3</span></div>
       <div class="card-title">Site Administration</div>
       <div class="card-desc">Client setup · Pricing · Invoicing &amp; PO requirements</div>
     </div>
@@ -420,7 +443,7 @@
      class="form-card" style="--card-accent:#64d2ff;">
     <div class="card-icon">📋</div>
     <div class="card-text">
-      <div style="margin-bottom:3px;"><span style="font-size:9px;font-weight:800;background:rgba(255,255,255,0.2);color:white;padding:2px 7px;border-radius:10px;letter-spacing:0.5px;">STEP 3A</span></div>
+      <div style="margin-bottom:3px;"><span style="font-size:9px;font-weight:800;background:rgba(255,255,255,0.2);color:white;padding:2px 7px;border-radius:10px;letter-spacing:0.5px;">STEP 4A</span></div>
       <div class="card-title">Bulk Site Audit</div>
       <div class="card-desc">Safety, QA &amp; ISO-22241 compliance · Full &amp; desktop modes</div>
     </div>
@@ -431,7 +454,7 @@
      class="form-card" style="--card-accent:#34d399;">
     <div class="card-icon">📦</div>
     <div class="card-text">
-      <div style="margin-bottom:3px;"><span style="font-size:9px;font-weight:800;background:rgba(255,255,255,0.2);color:white;padding:2px 7px;border-radius:10px;letter-spacing:0.5px;">STEP 3B</span></div>
+      <div style="margin-bottom:3px;"><span style="font-size:9px;font-weight:800;background:rgba(255,255,255,0.2);color:white;padding:2px 7px;border-radius:10px;letter-spacing:0.5px;">STEP 4B</span></div>
       <div class="card-title">Packaged Site Assessment</div>
       <div class="card-desc">Packaged products · Access, equipment &amp; site evaluation</div>
     </div>
@@ -470,7 +493,7 @@
 
   <!-- FOOTER -->
   <div class="footer">
-    <div class="footer-version">BIOBLUE FIELD TOOLS · V1.0 · JUNE 2026</div>
+    <div class="footer-version">BIOBLUE FIELD TOOLS · V1.1 · JUNE 2026</div>
   </div>
 
 </div>
@@ -766,24 +789,24 @@ async function checkFolderStatus(clientId) {
     const files = (ld.files || []).map(f => f.name.toLowerCase());
 
     // Check which forms are present
-    const hasProspect = files.some(f => f.includes('prospect'));
-    const hasAdmin    = files.some(f => f.includes('site_admin') || f.includes('admin'));
-    const hasBulkAudit= files.some(f => f.includes('site_audit'));
-    const hasPackaged = files.some(f => f.includes('packaged') || f.includes('assessment'));
-    const hasAudit    = hasBulkAudit || hasPackaged; // either counts as the "audit" step
+    const hasProspect = files.some(f => f.includes('prospect') || f.endsWith('.client.pdf'));
+    const hasQuote    = files.some(f => f.includes('quote') || f.endsWith('.quote.pdf'));
+    const hasAdmin    = files.some(f => f.includes('site_admin') || f.includes('admin') || f.endsWith('.admin.pdf'));
+    const hasBulkAudit= files.some(f => f.includes('site_audit') || f.endsWith('.audit.pdf'));
+    const hasPackaged = files.some(f => f.includes('packaged') || f.includes('assessment') || f.endsWith('.packaged.pdf'));
+    const hasAudit    = hasBulkAudit || hasPackaged;
 
-    // "Complete" = Prospect + Admin + at least one audit type (Bulk or Packaged)
     const isComplete = hasProspect && hasAdmin && (hasBulkAudit || hasPackaged);
-    const anyDone    = hasProspect || hasAdmin || hasBulkAudit || hasPackaged;
+    const anyDone    = hasProspect || hasQuote || hasAdmin || hasBulkAudit || hasPackaged;
     const badge = document.getElementById('selectedBadge');
     if (!badge) return;
 
-    // Four separate ticks — Bulk Audit and Packaged shown independently
     const parts = [
-      hasProspect  ? '✅ Prospect'   : '⬜ Prospect',
-      hasAdmin     ? '✅ Admin'      : '⬜ Admin',
-      hasBulkAudit ? '✅ Bulk Audit' : '⬜ Bulk Audit',
-      hasPackaged  ? '✅ Packaged'   : '⬜ Packaged',
+      hasProspect   ? '✅ Prospect'    : '⬜ Prospect',
+      hasQuote      ? '✅ Quote'       : '⬜ Quote',
+      hasAdmin      ? '✅ Admin'       : '⬜ Admin',
+      hasBulkAudit  ? '✅ Bulk Audit'  : '⬜ Bulk Audit',
+      hasPackaged   ? '✅ Packaged'    : '⬜ Packaged',
     ];
 
     if (isComplete) {

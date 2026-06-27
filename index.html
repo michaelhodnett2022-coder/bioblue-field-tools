@@ -701,7 +701,12 @@ function clearClientSelection() {
 
 function openForm(baseUrl) {
   const clientId = sessionStorage.getItem('bb_selected_client');
-  const url = clientId ? `${baseUrl}?client=${clientId}` : baseUrl;
+  const clientName = sessionStorage.getItem('bb_selected_client_name');
+  let url = baseUrl;
+  if (clientId) {
+    url += `?client=${clientId}`;
+    if (clientName) url += `&name=${encodeURIComponent(clientName)}`;
+  }
   window.location.href = url;
 }
 

@@ -861,6 +861,7 @@ async function getAdminSheetId(rootFolderId) {
     `https://www.googleapis.com/drive/v3/files?q=name='AA_App_Admin' and '${rootFolderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false&fields=files(id)`,
     { headers: { Authorization: `Bearer ${gdriveToken}` } }
   );
+  if (!afr.ok) throw new Error(`Admin folder search failed (${afr.status}) — Drive session may have expired, try reloading`);
   const afd = await afr.json();
   if (afd.files && afd.files.length) {
     adminFolderId = afd.files[0].id;
@@ -870,6 +871,7 @@ async function getAdminSheetId(rootFolderId) {
       headers: { Authorization: `Bearer ${gdriveToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: 'AA_App_Admin', mimeType: 'application/vnd.google-apps.folder', parents: [rootFolderId] })
     });
+    if (!cr.ok) throw new Error(`Admin folder creation failed (${cr.status}) — Drive session may have expired, try reloading`);
     adminFolderId = (await cr.json()).id;
   }
 
@@ -878,6 +880,7 @@ async function getAdminSheetId(rootFolderId) {
     `https://www.googleapis.com/drive/v3/files?q=name='BioBlue_Client_Records.xlsx' and '${adminFolderId}' in parents and trashed=false&fields=files(id)`,
     { headers: { Authorization: `Bearer ${gdriveToken}` } }
   );
+  if (!sr.ok) throw new Error(`Client records sheet search failed (${sr.status}) — Drive session may have expired, try reloading`);
   const sd = await sr.json();
   if (sd.files && sd.files.length) {
     _adminSheetIdCache = sd.files[0].id;
@@ -907,7 +910,10 @@ async function getAdminSheetId(rootFolderId) {
   form.append('file', blob, 'BioBlue_Client_Records.xlsx');
   const up = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
     { method:'POST', headers:{ Authorization:`Bearer ${gdriveToken}` }, body:form });
-  _adminSheetIdCache = (await up.json()).id;
+  if (!up.ok) throw new Error(`Client records sheet creation failed (${up.status}) — Drive session may have expired, try reloading`);
+  const _created = await up.json();
+  if (!_created.id) throw new Error('Client records sheet creation returned no ID');
+  _adminSheetIdCache = _created.id;
   return _adminSheetIdCache;
 }
 </script>

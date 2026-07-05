@@ -242,10 +242,18 @@
     font-size:10px;font-weight:700;letter-spacing:1.5px;
     text-transform:uppercase;color:rgba(255,255,255,0.4);
     margin-bottom:12px;
+    display:flex;align-items:center;justify-content:space-between;
+    cursor:pointer;user-select:none;
   }
+  .workflow-title.collapsed { margin-bottom:0; }
+  .workflow-chevron {
+    font-size:11px;transition:transform 0.2s ease;color:rgba(255,255,255,0.4);
+  }
+  .workflow-chevron.collapsed { transform:rotate(-90deg); }
   .workflow-steps {
     display:flex;flex-direction:column;gap:0;
   }
+  .workflow-steps.collapsed { display:none; }
   .workflow-step {
     display:flex;align-items:flex-start;gap:12px;
     position:relative;
@@ -350,8 +358,11 @@
 
   <!-- WORKFLOW GUIDE -->
   <div class="workflow-wrap">
-    <div class="workflow-title">How it works</div>
-    <div class="workflow-steps">
+    <div class="workflow-title collapsed" id="workflowTitle" onclick="toggleWorkflowGuide()">
+      How it works
+      <span class="workflow-chevron collapsed" id="workflowChevron">▾</span>
+    </div>
+    <div class="workflow-steps collapsed" id="workflowSteps">
 
       <div class="workflow-step">
         <div class="step-badge" style="background:#7c3aed;">1</div>
@@ -498,6 +509,18 @@
 
 </div>
 <script>
+// =====================================================================
+// WORKFLOW GUIDE — collapsible "How it works" section
+// =====================================================================
+function toggleWorkflowGuide() {
+  const steps = document.getElementById('workflowSteps');
+  const title = document.getElementById('workflowTitle');
+  const chevron = document.getElementById('workflowChevron');
+  const collapsed = steps.classList.toggle('collapsed');
+  title.classList.toggle('collapsed', collapsed);
+  chevron.classList.toggle('collapsed', collapsed);
+}
+
 // =====================================================================
 // CLIENT SELECTOR — Field Tools Landing Page
 // =====================================================================

@@ -578,18 +578,22 @@ async function loadClients() {
     const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
     const headers = rows[0] || [];
 
-    const idCol     = headers.indexOf('Client ID');
-    const nameCol   = headers.indexOf('Billing Entity');
-    const suburbCol = headers.indexOf('Suburb');
-    const stateCol  = headers.indexOf('State');
+    const idCol      = headers.indexOf('Client ID');
+    const nameCol    = headers.indexOf('Billing Entity');
+    const siteCol    = headers.indexOf('Site Name');
+    const contactCol = headers.indexOf('Business Contact Name');
+    const suburbCol  = headers.indexOf('Suburb');
+    const stateCol   = headers.indexOf('State');
 
     clientData = rows.slice(1)
       .filter(r => r[idCol] && r[nameCol])
       .map(r => ({
-        id:     r[idCol]     || '',
-        name:   r[nameCol]   || '',
-        suburb: r[suburbCol] || '',
-        state:  r[stateCol]  || '',
+        id:          r[idCol]      || '',
+        name:        r[nameCol]    || '',
+        siteName:    r[siteCol]    || '',
+        contactName: r[contactCol] || '',
+        suburb:      r[suburbCol]  || '',
+        state:       r[stateCol]   || '',
       }));
 
     if (clientData.length === 0) {
@@ -611,14 +615,15 @@ async function loadClients() {
     if (saved) {
       const cl = allClients.find(c => c.id === saved);
       if (cl) {
-        // Resolve full name now that list is loaded
-        sessionStorage.setItem('bb_selected_client_name', cl.name);
+        // Resolve full name now that list is loaded — prefer the distinctive Site Name
+        const displayName = cl.siteName || cl.name;
+        sessionStorage.setItem('bb_selected_client_name', displayName);
         const searchBox = document.getElementById('clientSearch');
-        if (searchBox) searchBox.value = cl.name;
+        if (searchBox) searchBox.value = displayName;
         const badge = document.getElementById('selectedBadge');
         if (badge) {
           badge.style.display = 'flex';
-          badge.textContent = `✅ Active: ${cl.name}${cl.suburb?' · '+cl.suburb:''}${cl.state?' ('+cl.state+')':''}`;
+          badge.textContent = `✅ Active: ${displayName}${cl.suburb?' · '+cl.suburb:''}${cl.state?' ('+cl.state+')':''}`;
         }
         const upBtn = document.getElementById('updateProspectBtn');
         if (upBtn) upBtn.style.display = 'block';
@@ -635,6 +640,13 @@ async function loadClients() {
 
 let allClients = [];
 
+// Normalizes text for matching: lowercase, strip all punctuation/spaces/dashes.
+// This means "Viva - OTR – Nuriootpa SS" and "viva otr nuriootpa ss" match identically,
+// so BDMs don't need to type exact dashes/spacing to find a client.
+function normalizeSearchText(s) {
+  return (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
 function filterClients(query) {
   const drop = document.getElementById('clientDropdown');
   if (!drop) return;
@@ -647,13 +659,15 @@ function filterClients(query) {
     return;
   }
 
-  const q = query.toLowerCase().trim();
+  const q = normalizeSearchText(query);
   const matches = q
     ? allClients.filter(cl =>
-        cl.name.toLowerCase().includes(q) ||
-        (cl.suburb||'').toLowerCase().includes(q) ||
-        (cl.state||'').toLowerCase().includes(q) ||
-        cl.id.toLowerCase().includes(q)
+        normalizeSearchText(cl.siteName).includes(q) ||
+        normalizeSearchText(cl.name).includes(q) ||
+        normalizeSearchText(cl.contactName).includes(q) ||
+        normalizeSearchText(cl.id).includes(q) ||
+        normalizeSearchText(cl.suburb).includes(q) ||
+        normalizeSearchText(cl.state).includes(q)
       )
     : allClients;
 
@@ -664,13 +678,16 @@ function filterClients(query) {
     return;
   }
 
-  drop.innerHTML = matches.slice(0,20).map(cl => `
-    <div onclick="selectClientFromSearch('${cl.id}','${cl.name.replace(/'/g,"\'")}')"
+  drop.innerHTML = matches.slice(0,20).map(cl => {
+    const displayName = cl.siteName || cl.name;
+    return `
+    <div onclick="selectClientFromSearch('${cl.id}','${displayName.replace(/'/g,"\'")}')"
       style="padding:10px 14px;cursor:pointer;font-size:13px;color:white;border-bottom:1px solid rgba(255,255,255,0.1);"
       onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">
-      <span style="font-weight:600;">${cl.name}</span>
+      <span style="font-weight:600;">${displayName}</span>
       <span style="opacity:0.5;font-size:11px;margin-left:6px;">${cl.suburb||''} ${cl.state?'('+cl.state+')':''} · ${cl.id}</span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   drop.style.display = 'block';
 }
 

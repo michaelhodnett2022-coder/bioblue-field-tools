@@ -320,42 +320,6 @@
   </div>
 
   <!-- CLIENT SELECTOR -->
-  <div class="client-selector-wrap">
-    <div class="client-selector-label">Active Client</div>
-    <div class="client-selector-row">
-      <div style="position:relative;flex:1;">
-        <input type="text" id="clientSearch" placeholder="Search clients..." autocomplete="off"
-          oninput="filterClients(this.value)"
-          style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.2);
-            background:rgba(255,255,255,0.1);color:white;font-family:DM Sans,sans-serif;
-            font-size:13px;-webkit-appearance:none;">
-        <div id="clientDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;
-          background:#003466;border:1px solid rgba(255,255,255,0.2);border-radius:0 0 10px 10px;
-          max-height:200px;overflow-y:auto;z-index:99;box-shadow:0 8px 24px rgba(0,0,0,0.3);">
-        </div>
-      </div>
-      <button class="load-clients-btn" onclick="loadClients()">☁️ Load</button>
-      <button class="load-clients-btn" onclick="clearClientSelection()" style="background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.25);">🧹 Clear</button>
-    </div>
-    <div style="display:flex;gap:8px;margin-top:8px;">
-      <a href="https://michaelhodnett2022-coder.github.io/bioblue-prospect"
-        style="flex:1;text-align:center;padding:9px 8px;background:rgba(196,181,253,0.2);
-          border:1.5px solid rgba(196,181,253,0.4);border-radius:8px;
-          font-size:12px;font-weight:700;color:#ddd6fe;text-decoration:none;">
-        + New Client
-      </a>
-      <button id="updateProspectBtn" onclick="openUpdateProspect()" style="display:none;flex:1;
-        padding:9px 8px;background:rgba(196,181,253,0.2);
-        border:1.5px solid rgba(196,181,253,0.4);border-radius:8px;
-        font-size:12px;font-weight:700;color:#ddd6fe;cursor:pointer;
-        font-family:DM Sans,sans-serif;">
-        ✏️ Update Prospect
-      </button>
-    </div>
-    <div class="client-status" id="clientStatus">Tap Load to fetch clients from Drive</div>
-    <div class="selected-client-badge" id="selectedBadge"></div>
-  </div>
-
   <!-- WORKFLOW GUIDE -->
   <div class="workflow-wrap">
     <div class="workflow-title collapsed" id="workflowTitle" onclick="toggleWorkflowGuide()">
@@ -408,22 +372,75 @@
     </div>
   </div>
 
+  <a href="https://michaelhodnett2022-coder.github.io/bioblue-prospect"
+    style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
+      padding:16px 8px;margin-bottom:12px;background:rgba(255,255,255,0.08);
+      border:1.5px solid rgba(52,211,153,0.5);border-radius:10px;
+      text-decoration:none;">
+    <div style="width:34px;height:34px;border-radius:50%;background:#34d399;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#022c22" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M17 8v6M20 11h-6"/></svg>
+    </div>
+    <span style="font-size:14px;font-weight:700;color:white;">New client</span>
+  </a>
+
+  <div class="client-selector-wrap">
+    <div class="client-selector-label">Active Client</div>
+    <div class="client-selector-row">
+      <div style="position:relative;flex:1;">
+        <input type="text" id="clientSearch" placeholder="Search clients..." autocomplete="off"
+          oninput="filterClients(this.value)"
+          style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.2);
+            background:rgba(255,255,255,0.1);color:white;font-family:DM Sans,sans-serif;
+            font-size:13px;-webkit-appearance:none;">
+        <div id="clientDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;
+          background:#003466;border:1px solid rgba(255,255,255,0.2);border-radius:0 0 10px 10px;
+          max-height:200px;overflow-y:auto;z-index:99;box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+        </div>
+      </div>
+      <button class="load-clients-btn" onclick="loadClients()">☁️ Load</button>
+      <button class="load-clients-btn" onclick="clearClientSelection()" style="background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.25);">🧹 Clear</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+      <button id="editClientBtn" onclick="openEditClientDetails()" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+          padding:18px 8px;background:rgba(255,255,255,0.08);
+          border:1.5px solid rgba(251,191,36,0.5);border-radius:10px;
+          cursor:pointer;font-family:DM Sans,sans-serif;transition:opacity 0.2s,filter 0.2s;">
+        <div style="width:38px;height:38px;border-radius:50%;background:#fbbf24;display:flex;align-items:center;justify-content:center;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#451a03" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 21v-4h6v4M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1"/></svg>
+        </div>
+        <span style="font-size:13px;font-weight:700;color:white;">Edit client details</span>
+      </button>
+      <button id="cloneClientBtn" onclick="cloneFromSelectedClient()" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+          padding:18px 8px;background:rgba(255,255,255,0.08);
+          border:1.5px solid rgba(56,189,248,0.5);border-radius:10px;
+          cursor:pointer;font-family:DM Sans,sans-serif;transition:opacity 0.2s,filter 0.2s;">
+        <div style="position:relative;width:60px;height:38px;">
+          <div style="position:absolute;left:22px;top:0;width:38px;height:38px;border-radius:50%;background:#38bdf8;display:flex;align-items:center;justify-content:center;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#082f49" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
+          </div>
+          <div style="position:absolute;left:0;top:0;width:38px;height:38px;border-radius:50%;background:#38bdf8;display:flex;align-items:center;justify-content:center;border:2px solid #0D1B2A;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#082f49" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
+          </div>
+        </div>
+        <span style="font-size:13px;font-weight:700;color:white;">Clone existing client</span>
+      </button>
+    </div>
+    <div style="margin-top:8px;">
+      <button id="updateProspectBtn" onclick="openUpdateProspect()" style="display:none;width:100%;
+        padding:9px 8px;background:rgba(196,181,253,0.2);
+        border:1.5px solid rgba(196,181,253,0.4);border-radius:8px;
+        font-size:12px;font-weight:700;color:#ddd6fe;cursor:pointer;
+        font-family:DM Sans,sans-serif;">
+        ✏️ Update Prospect
+      </button>
+    </div>
+    <div class="client-status" id="clientStatus">Tap Load to fetch clients from Drive</div>
+    <div class="selected-client-badge" id="selectedBadge"></div>
+  </div>
+
   <!-- FORMS -->
   <div class="section-label">Site Forms</div>
-
-  <a href="javascript:void(0)" onclick="openForm('https://michaelhodnett2022-coder.github.io/bioblue-prospect')"
-     class="form-card" style="--card-accent:#c4b5fd;">
-    <div class="card-icon">🎯</div>
-    <div class="card-text">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
-        <span style="font-size:9px;font-weight:800;background:#7c3aed;color:white;padding:2px 7px;border-radius:10px;letter-spacing:0.5px;">STEP 1</span>
-        <span style="font-size:9px;font-weight:800;background:#c4b5fd;color:#3b0764;padding:2px 7px;border-radius:10px;letter-spacing:0.5px;">START HERE</span>
-      </div>
-      <div class="card-title">Prospect / Client</div>
-      <div class="card-desc">New &amp; existing clients · Lead capture · CRM data</div>
-    </div>
-    <div class="card-arrow">›</div>
-  </a>
 
   <a href="javascript:void(0)" onclick="openForm('https://michaelhodnett2022-coder.github.io/bioblue-quote')"
      class="form-card" style="--card-accent:#38bdf8;">
@@ -578,22 +595,18 @@ async function loadClients() {
     const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
     const headers = rows[0] || [];
 
-    const idCol      = headers.indexOf('Client ID');
-    const nameCol    = headers.indexOf('Billing Entity');
-    const siteCol    = headers.indexOf('Site Name');
-    const contactCol = headers.indexOf('Business Contact Name');
-    const suburbCol  = headers.indexOf('Suburb');
-    const stateCol   = headers.indexOf('State');
+    const idCol     = headers.indexOf('Client ID');
+    const nameCol   = headers.indexOf('Billing Entity');
+    const suburbCol = headers.indexOf('Suburb');
+    const stateCol  = headers.indexOf('State');
 
     clientData = rows.slice(1)
       .filter(r => r[idCol] && r[nameCol])
       .map(r => ({
-        id:          r[idCol]      || '',
-        name:        r[nameCol]    || '',
-        siteName:    r[siteCol]    || '',
-        contactName: r[contactCol] || '',
-        suburb:      r[suburbCol]  || '',
-        state:       r[stateCol]   || '',
+        id:     r[idCol]     || '',
+        name:   r[nameCol]   || '',
+        suburb: r[suburbCol] || '',
+        state:  r[stateCol]  || '',
       }));
 
     if (clientData.length === 0) {
@@ -615,20 +628,20 @@ async function loadClients() {
     if (saved) {
       const cl = allClients.find(c => c.id === saved);
       if (cl) {
-        // Resolve full name now that list is loaded — prefer the distinctive Site Name
-        const displayName = cl.siteName || cl.name;
-        sessionStorage.setItem('bb_selected_client_name', displayName);
+        // Resolve full name now that list is loaded
+        sessionStorage.setItem('bb_selected_client_name', cl.name);
         const searchBox = document.getElementById('clientSearch');
-        if (searchBox) searchBox.value = displayName;
+        if (searchBox) searchBox.value = cl.name;
         const badge = document.getElementById('selectedBadge');
         if (badge) {
           badge.style.display = 'flex';
-          badge.textContent = `✅ Active: ${displayName}${cl.suburb?' · '+cl.suburb:''}${cl.state?' ('+cl.state+')':''}`;
+          badge.textContent = `✅ Active: ${cl.name}${cl.suburb?' · '+cl.suburb:''}${cl.state?' ('+cl.state+')':''}`;
         }
         const upBtn = document.getElementById('updateProspectBtn');
         if (upBtn) upBtn.style.display = 'block';
         // Re-check folder status with resolved client
         setTimeout(() => checkFolderStatus(saved), 300);
+        updateClientDependentButtons();
       }
     }
 
@@ -639,13 +652,6 @@ async function loadClients() {
 }
 
 let allClients = [];
-
-// Normalizes text for matching: lowercase, strip all punctuation/spaces/dashes.
-// This means "Viva - OTR – Nuriootpa SS" and "viva otr nuriootpa ss" match identically,
-// so BDMs don't need to type exact dashes/spacing to find a client.
-function normalizeSearchText(s) {
-  return (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-}
 
 function filterClients(query) {
   const drop = document.getElementById('clientDropdown');
@@ -659,15 +665,13 @@ function filterClients(query) {
     return;
   }
 
-  const q = normalizeSearchText(query);
+  const q = query.toLowerCase().trim();
   const matches = q
     ? allClients.filter(cl =>
-        normalizeSearchText(cl.siteName).includes(q) ||
-        normalizeSearchText(cl.name).includes(q) ||
-        normalizeSearchText(cl.contactName).includes(q) ||
-        normalizeSearchText(cl.id).includes(q) ||
-        normalizeSearchText(cl.suburb).includes(q) ||
-        normalizeSearchText(cl.state).includes(q)
+        cl.name.toLowerCase().includes(q) ||
+        (cl.suburb||'').toLowerCase().includes(q) ||
+        (cl.state||'').toLowerCase().includes(q) ||
+        cl.id.toLowerCase().includes(q)
       )
     : allClients;
 
@@ -678,16 +682,13 @@ function filterClients(query) {
     return;
   }
 
-  drop.innerHTML = matches.slice(0,20).map(cl => {
-    const displayName = cl.siteName || cl.name;
-    return `
-    <div onclick="selectClientFromSearch('${cl.id}','${displayName.replace(/'/g,"\'")}')"
+  drop.innerHTML = matches.slice(0,20).map(cl => `
+    <div onclick="selectClientFromSearch('${cl.id}','${cl.name.replace(/'/g,"\'")}')"
       style="padding:10px 14px;cursor:pointer;font-size:13px;color:white;border-bottom:1px solid rgba(255,255,255,0.1);"
       onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">
-      <span style="font-weight:600;">${displayName}</span>
+      <span style="font-weight:600;">${cl.name}</span>
       <span style="opacity:0.5;font-size:11px;margin-left:6px;">${cl.suburb||''} ${cl.state?'('+cl.state+')':''} · ${cl.id}</span>
-    </div>`;
-  }).join('');
+    </div>`).join('');
   drop.style.display = 'block';
 }
 
@@ -705,6 +706,7 @@ function selectClientFromSearch(id, name) {
   if (upBtn) upBtn.style.display = 'block';
   // Check folder completeness and colour badge
   setTimeout(() => checkFolderStatus(id), 300);
+  updateClientDependentButtons();
 }
 
 document.addEventListener('click', e => {
@@ -737,6 +739,7 @@ function clearClientSelection() {
   setStatus(allClients.length
     ? `✅ ${allClients.length} client${allClients.length!==1?'s':''} loaded — type to search`
     : 'Tap Load to fetch clients from Drive');
+  updateClientDependentButtons();
 }
 
 function openForm(baseUrl) {
@@ -748,6 +751,48 @@ function openForm(baseUrl) {
     if (clientName) url += `&name=${encodeURIComponent(clientName)}`;
   }
   window.location.href = url;
+}
+
+// Clone uses the SAME client selection as every other button on this page,
+// but sends a different signal (?clone=X, never ?client=X) — this must never
+// be mistaken for "go edit this client", since it's creating a brand new one
+// using this client's contacts as a starting point.
+function cloneFromSelectedClient() {
+  const clientId = sessionStorage.getItem('bb_selected_client');
+  const clientName = sessionStorage.getItem('bb_selected_client_name');
+  if (!clientId) {
+    setStatus('⚠️ Load Active Client First');
+    const searchBox = document.getElementById('clientSearch');
+    if (searchBox) searchBox.focus();
+    return;
+  }
+  let url = 'https://michaelhodnett2022-coder.github.io/bioblue-prospect/?clone=' + encodeURIComponent(clientId);
+  if (clientName) url += '&name=' + encodeURIComponent(clientName);
+  window.location.href = url;
+}
+
+function openEditClientDetails() {
+  const clientId = sessionStorage.getItem('bb_selected_client');
+  if (!clientId) {
+    setStatus('⚠️ Load Active Client First');
+    const searchBox = document.getElementById('clientSearch');
+    if (searchBox) searchBox.focus();
+    return;
+  }
+  openForm('https://michaelhodnett2022-coder.github.io/bioblue-prospect');
+}
+
+// Ghosts Edit Client Details and Clone until a client is actually selected —
+// called everywhere bb_selected_client is set or cleared, so the two always
+// reflect the true current state rather than just their initial page load.
+function updateClientDependentButtons() {
+  const hasClient = !!sessionStorage.getItem('bb_selected_client');
+  ['editClientBtn', 'cloneClientBtn'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.style.opacity = hasClient ? '1' : '0.4';
+    btn.style.filter = hasClient ? 'none' : 'grayscale(70%)';
+  });
 }
 
 // Restore on page load + handle returning from form submission
@@ -779,6 +824,7 @@ window.addEventListener('load', () => {
     if (upBtn) upBtn.style.display = 'block';
     setStatus('Client active — tap a form to continue, or Load to refresh list');
   }
+  updateClientDependentButtons();
 
   // If returning from a form submission, only auto-refresh the list IF we already
   // hold a valid Drive token. We must NOT trigger the Google sign-in popup from an

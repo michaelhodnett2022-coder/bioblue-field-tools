@@ -220,11 +220,11 @@
   }
   .selected-client-badge {
     display:none;
-    background:rgba(100,210,255,0.15);
-    border:1px solid rgba(100,210,255,0.3);
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.22);
     border-radius:8px;padding:8px 12px;
     margin-top:8px;
-    font-size:12px;color:#a8d4f5;
+    font-size:12px;color:rgba(255,255,255,0.92);
     font-weight:600;
     flex-direction:column;
     transition:background 0.3s,border-color 0.3s,color 0.3s;
@@ -888,49 +888,60 @@ async function checkFolderStatus(clientId) {
     const hasAudit    = hasBulkAudit || hasPackaged;
 
     const isComplete = hasProspect && hasAdmin && (hasBulkAudit || hasPackaged);
-    const anyDone    = hasProspect || hasQuote || hasAdmin || hasBulkAudit || hasPackaged;
     const badge = document.getElementById('selectedBadge');
     if (!badge) return;
 
-    const parts = [
-      hasProspect   ? '✅ Prospect'    : '⬜ Prospect',
-      hasQuote      ? '✅ Quote'       : '⬜ Quote',
-      hasAdmin      ? '✅ Admin'       : '⬜ Admin',
-      hasBulkAudit  ? '✅ Bulk Audit'  : '⬜ Bulk Audit',
-      hasPackaged   ? '✅ Packaged'    : '⬜ Packaged',
+    // Each item is its own {label, state} — state is 'done' | 'draft' | 'none'.
+    // 'draft' isn't wired to real data yet (needs the future draft-status
+    // flag in the spreadsheet), but the structure is ready for it — once
+    // that exists, this array just needs a third condition per item, no
+    // visual rework required.
+    const items = [
+      { label: 'Prospect',   state: hasProspect   ? 'done' : 'none' },
+      { label: 'Quote',      state: hasQuote      ? 'done' : 'none' },
+      { label: 'Admin',      state: hasAdmin      ? 'done' : 'none' },
+      { label: 'Bulk Audit', state: hasBulkAudit  ? 'done' : 'none' },
+      { label: 'Packaged',   state: hasPackaged   ? 'done' : 'none' },
     ];
 
-    if (isComplete) {
-      // Complete — green
-      badge.style.background  = 'rgba(0,135,90,0.2)';
-      badge.style.borderColor = 'rgba(0,135,90,0.5)';
-      badge.style.color       = '#6ee7b7';
-    } else if (!anyDone) {
-      // Nothing yet — grey
-      badge.style.background  = 'rgba(100,210,255,0.15)';
-      badge.style.borderColor = 'rgba(100,210,255,0.3)';
-      badge.style.color       = '#a8d4f5';
-    } else {
-      // Partial — amber
-      badge.style.background  = 'rgba(230,126,34,0.2)';
-      badge.style.borderColor = 'rgba(230,126,34,0.4)';
-      badge.style.color       = '#fcd34d';
-    }
-    updateBadgeStatus(badge, parts.join('  '));
+    // Box stays visually consistent regardless of completion state — only
+    // the individual ticks below carry colour meaning now, not the whole box.
+    badge.style.background  = 'rgba(255,255,255,0.08)';
+    badge.style.borderColor = 'rgba(255,255,255,0.22)';
+    badge.style.color       = 'rgba(255,255,255,0.92)';
+
+    updateBadgeStatus(badge, items, isComplete);
   } catch(e) {
     console.warn('Folder status check failed:', e.message);
   }
 }
 
-function updateBadgeStatus(badge, statusText) {
-  // Add status line below existing badge text
+function updateBadgeStatus(badge, items, isComplete) {
   const existing = badge.querySelector('.folder-status');
   if (existing) existing.remove();
+
+  const TICK_COLOR  = { done: '#4ADE80', draft: '#fbbf24', none: 'rgba(255,255,255,0.35)' };
+  const LABEL_COLOR = { done: '#4ADE80', draft: '#fbbf24', none: 'rgba(255,255,255,0.85)' };
+  const TICK_GLYPH  = { done: '✓', draft: '●', none: '○' };
+
   const span = document.createElement('div');
   span.className = 'folder-status';
-  span.style.cssText = 'font-size:10px;margin-top:4px;letter-spacing:0.3px;';
-  span.textContent = statusText;
+  span.style.cssText = 'font-size:11px;margin-top:6px;letter-spacing:0.2px;display:flex;flex-wrap:wrap;gap:8px;';
+  span.innerHTML = items.map(it => `
+    <span style="display:inline-flex;align-items:center;gap:4px;">
+      <span style="color:${TICK_COLOR[it.state]};font-weight:900;font-size:16px;line-height:1;">${TICK_GLYPH[it.state]}</span>
+      <span style="color:${LABEL_COLOR[it.state]};font-weight:${it.state==='none'?400:700};">${it.label}</span>
+    </span>
+  `).join('');
   badge.appendChild(span);
+
+  if (isComplete) {
+    const doneRow = document.createElement('div');
+    doneRow.className = 'folder-status';
+    doneRow.style.cssText = 'font-size:10px;margin-top:4px;color:#4ADE80;font-weight:700;';
+    doneRow.textContent = '✓ Complete';
+    badge.appendChild(doneRow);
+  }
 }
 
 // =====================================================================

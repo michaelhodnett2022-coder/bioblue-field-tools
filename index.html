@@ -841,6 +841,55 @@ window.addEventListener('load', () => {
 // =====================================================================
 // FOLDER STATUS CHECK — colour code by completeness
 // =====================================================================
+// Checks for a saved-but-not-yet-submitted draft in each of the given
+// form types' own JSON subfolders (Data/Admin Data, Data/Quote Data, etc.)
+// — the exact same location and filename pattern each form's own saveDraft()
+// already uses, so nothing about those forms needs to change for this to
+// work. Only called for types that aren't already 'done', and only ever
+// reads (never creates) the Data folder, since a client with nothing
+// drafted yet may not have one at all.
+async function checkDraftStates(clientFolderId, clientId, neededTypes) {
+  const result = { quote: false, admin: false, bulkAudit: false, packaged: false };
+  if (!neededTypes.length) return result;
+  try {
+    const dr = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q='${clientFolderId}' in parents and name='Data' and mimeType='application/vnd.google-apps.folder' and trashed=false&fields=files(id)`,
+      { headers: { Authorization: `Bearer ${gdriveToken}` } });
+    const dd = await dr.json();
+    if (!dd.files?.length) return result; // no Data folder yet — nothing drafted
+    const dataFolderId = dd.files[0].id;
+
+    // List every subfolder of Data in one call, rather than one lookup per type
+    const sr = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q='${dataFolderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false&fields=files(id,name)`,
+      { headers: { Authorization: `Bearer ${gdriveToken}` } });
+    const sd = await sr.json();
+    const subfolders = sd.files || [];
+
+    // Matches each form's own JSON_SUBFOLDER constant and saveDraft() filename exactly
+    const TYPE_META = {
+      quote:     { subfolder: 'Quote Data',      file: `BB_Quote_${clientId}_draft.json` },
+      admin:     { subfolder: 'Admin Data',      file: `BB_Admin_${clientId}.json` },
+      bulkAudit: { subfolder: 'Bulk Audit Data', file: `BB_Audit_${clientId}.json` },
+      packaged:  { subfolder: 'Packaged Data',   file: `BB_Packaged_${clientId}.json` },
+    };
+
+    await Promise.all(neededTypes.map(async (type) => {
+      const meta = TYPE_META[type];
+      const folder = subfolders.find(f => f.name === meta.subfolder);
+      if (!folder) return; // that form's subfolder doesn't exist yet — no draft possible
+      const fr = await fetch(
+        `https://www.googleapis.com/drive/v3/files?q=name='${meta.file}' and '${folder.id}' in parents and trashed=false&fields=files(id)`,
+        { headers: { Authorization: `Bearer ${gdriveToken}` } });
+      const fd = await fr.json();
+      result[type] = !!(fd.files && fd.files.length);
+    }));
+  } catch(e) {
+    console.warn('checkDraftStates failed (non-fatal):', e.message);
+  }
+  return result;
+}
+
 async function checkFolderStatus(clientId) {
   if (!gdriveToken || !clientId) return;
   try {
@@ -891,17 +940,24 @@ async function checkFolderStatus(clientId) {
     const badge = document.getElementById('selectedBadge');
     if (!badge) return;
 
+    // Draft state: only check items that aren't already done — done always
+    // wins, so a stray leftover draft file (e.g. if cleanup-on-submit ever
+    // failed) can never incorrectly override a real submission. Prospect
+    // has no draft concept, so it's excluded here.
+    const neededDraftChecks = [];
+    if (!hasQuote)     neededDraftChecks.push('quote');
+    if (!hasAdmin)     neededDraftChecks.push('admin');
+    if (!hasBulkAudit) neededDraftChecks.push('bulkAudit');
+    if (!hasPackaged)  neededDraftChecks.push('packaged');
+    const drafts = await checkDraftStates(folderId, clientId, neededDraftChecks);
+
     // Each item is its own {label, state} — state is 'done' | 'draft' | 'none'.
-    // 'draft' isn't wired to real data yet (needs the future draft-status
-    // flag in the spreadsheet), but the structure is ready for it — once
-    // that exists, this array just needs a third condition per item, no
-    // visual rework required.
     const items = [
-      { label: 'Prospect',   state: hasProspect   ? 'done' : 'none' },
-      { label: 'Quote',      state: hasQuote      ? 'done' : 'none' },
-      { label: 'Admin',      state: hasAdmin      ? 'done' : 'none' },
-      { label: 'Bulk Audit', state: hasBulkAudit  ? 'done' : 'none' },
-      { label: 'Packaged',   state: hasPackaged   ? 'done' : 'none' },
+      { label: 'Prospect',   state: hasProspect  ? 'done' : 'none' },
+      { label: 'Quote',      state: hasQuote     ? 'done' : (drafts.quote     ? 'draft' : 'none') },
+      { label: 'Admin',      state: hasAdmin     ? 'done' : (drafts.admin     ? 'draft' : 'none') },
+      { label: 'Bulk Audit', state: hasBulkAudit ? 'done' : (drafts.bulkAudit ? 'draft' : 'none') },
+      { label: 'Packaged',   state: hasPackaged  ? 'done' : (drafts.packaged  ? 'draft' : 'none') },
     ];
 
     // Box stays visually consistent regardless of completion state — only

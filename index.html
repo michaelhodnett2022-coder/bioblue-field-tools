@@ -932,8 +932,11 @@ async function checkFolderStatus(clientId) {
     const hasProspect = files.some(f => f.includes('prospect') || f.endsWith('.client.pdf'));
     const hasQuote    = files.some(f => f.includes('quote') || f.endsWith('.quote.pdf'));
     const hasAdmin    = files.some(f => f.includes('site_admin') || f.includes('admin') || f.endsWith('.admin.pdf'));
-    const hasBulkAudit= files.some(f => f.includes('site_audit') || f.endsWith('.audit.pdf'));
-    const hasPackaged = files.some(f => f.includes('packaged') || f.includes('assessment') || f.endsWith('.packaged.pdf'));
+    // Draft PDFs (Stage 3) live in the client's root folder for these two
+    // forms and are named "...DRAFT.pdf" — excluded here with .draft. so a
+    // client with only a draft saved doesn't register as fully complete.
+    const hasBulkAudit= files.some(f => (f.includes('site_audit') || f.endsWith('.audit.pdf')) && !f.includes('.draft.'));
+    const hasPackaged = files.some(f => (f.includes('packaged') || f.includes('assessment') || f.endsWith('.packaged.pdf')) && !f.includes('.draft.'));
     const hasAudit    = hasBulkAudit || hasPackaged;
 
     const isComplete = hasProspect && hasAdmin && (hasBulkAudit || hasPackaged);

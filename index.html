@@ -302,6 +302,10 @@
     border:1px solid rgba(255,255,255,0.2);
     color:white;opacity:0.8;
   }
+.bb-conn{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.78);margin-top:5px;}
+.bb-conn-dot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,0.35);flex-shrink:0;}
+.bb-conn.on .bb-conn-dot{background:#4ADE80;box-shadow:0 0 6px rgba(74,222,128,0.7);}
+.bb-conn.err .bb-conn-dot{background:#f87171;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -317,6 +321,7 @@
     </div>
     <h1>Field Tools</h1>
     <p>BioBlue AdBlue® · Site Operations Suite</p>
+    <div class="bb-conn" title="Google sign-in (shared by all Field Tools)"><span class="bb-conn-dot"></span><span class="bb-conn-label">Not connected to Google</span></div>
   </div>
 
   <!-- CLIENT SELECTOR -->
@@ -565,6 +570,56 @@ const GDRIVE_CLIENT_ID    = '49055725643-mlnqu8l92vmau83rnrk8imupiqvs03t1.apps.g
 const GDRIVE_FOLDER_NAME  = 'BioBlue Audits';
 const CLIENT_RECORDS_NAME = 'BioBlue_Client_Records.xlsx';
 let gdriveToken = null;
+// =====================================================================
+// SHARED GOOGLE SIGN-IN (26 Nov 2026) — every Field Tools app (Hub, forms,
+// Tracker) runs on the same site with the same Google client, so one sign-in
+// is kept on this device and shared by all of them until ~10 min before
+// Google's 1-hour expiry (margin covers a long audit upload). A sign-in made
+// in another app is picked up here too. Google rejects it (401) or it
+// expires -> cleared; the next tap asks Google again. tokenLive() replaces
+// bare gdriveToken checks. Same block in every app — keep them in step.
+// =====================================================================
+const SHARED_TOKEN_STORE = 'bb_gtoken';
+let gdriveTokenExp = 0, connRejected = false;
+function storeToken(r) {
+  gdriveToken = r.access_token;
+  gdriveTokenExp = Date.now() + ((Number(r.expires_in) || 3600) - 600) * 1000;
+  try { localStorage.setItem(SHARED_TOKEN_STORE, JSON.stringify({ t: gdriveToken, exp: gdriveTokenExp })); } catch (e) {}
+  connRejected = false;
+  updateConnDot();
+}
+function clearToken() {
+  gdriveToken = null; gdriveTokenExp = 0;
+  try { localStorage.removeItem(SHARED_TOKEN_STORE); } catch (e) {}
+}
+function tokenLive() {
+  if (gdriveToken && Date.now() < gdriveTokenExp) return true;
+  try {
+    const s = JSON.parse(localStorage.getItem(SHARED_TOKEN_STORE) || 'null');
+    if (s && s.t && Date.now() < s.exp) { gdriveToken = s.t; gdriveTokenExp = s.exp; return true; }
+  } catch (e) {}
+  clearToken();   // nothing valid here or in the store (an expired entry is removed)
+  return false;
+}
+// Green dot = signed in right now; grey = not signed in / expired; red = Google rejected it.
+function updateConnDot() {
+  const on = tokenLive();
+  document.querySelectorAll('.bb-conn').forEach(el => {
+    el.classList.toggle('on', on);
+    el.classList.toggle('err', !on && connRejected);
+    const l = el.querySelector('.bb-conn-label');
+    if (l) l.textContent = on ? 'Connected to Google' : connRejected ? 'Google sign-in expired \u2014 sign in again' : 'Not connected to Google';
+  });
+}
+const _bbRawFetch = window.fetch.bind(window);
+window.fetch = async (url, opts) => {
+  const r = await _bbRawFetch(url, opts);
+  if (r.status === 401 && String(url).includes('googleapis.com')) { clearToken(); connRejected = true; updateConnDot(); }
+  return r;
+};
+setInterval(updateConnDot, 30000);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') updateConnDot(); });
+document.addEventListener('DOMContentLoaded', updateConnDot);
 let clientData  = []; // [{id, name, suburb, state}]
 
 function setStatus(msg) {
@@ -574,13 +629,13 @@ function setStatus(msg) {
 async function loadClients() {
   setStatus('🔐 Connecting to Google...');
   try {
-    if (!gdriveToken) {
+    if (!tokenLive()) {
       await new Promise((resolve, reject) => {
         const client = google.accounts.oauth2.initTokenClient({
           client_id: GDRIVE_CLIENT_ID,
           scope: 'https://www.googleapis.com/auth/drive.file',
           callback: r => {
-            if (r.access_token) { gdriveToken = r.access_token; resolve(); }
+            if (r.access_token) { storeToken(r); resolve(); }
             else reject(new Error(r.error || 'Sign-in failed'));
           },
           error_callback: e => reject(new Error(e.message || 'Sign-in failed'))
@@ -846,12 +901,12 @@ window.addEventListener('load', () => {
   }
   updateClientDependentButtons();
 
-  // If returning from a form submission, only auto-refresh the list IF we already
-  // hold a valid Drive token. We must NOT trigger the Google sign-in popup from an
+  // Auto-refresh the list only IF we already hold a valid Drive token (shared
+  // sign-in from any Field Tools app, 26 Nov 2026 — previously only when
+  // returning from a form). We must NOT trigger the Google sign-in popup from an
   // automatic (non-click) context — browsers block popups without a user gesture,
-  // which was causing the silent failures. The badge already shows the client name
-  // from session; the BDM taps Load (a real gesture) when they want a fresh fetch.
-  if (returning && gdriveToken) {
+  // which was causing the silent failures. Not signed in -> the BDM taps Load.
+  if (tokenLive()) {
     setTimeout(() => {
       try { loadClients(); } catch(e) { /* silent — user can tap Load */ }
     }, 600);
@@ -911,7 +966,7 @@ async function checkDraftStates(clientFolderId, clientId, neededTypes) {
 }
 
 async function checkFolderStatus(clientId) {
-  if (!gdriveToken || !clientId) return;
+  if (!tokenLive() || !clientId) return;
   try {
     // Get folder ID from client records
     const fr = await fetch(
